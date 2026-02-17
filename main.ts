@@ -1,17 +1,24 @@
-import { Client } from "https://deno.land/x/postgres/mod.ts";
+import postgres from "https://deno.land/x/postgresjs@v3.4.4/mod.js";
 
-const client = new Client(Deno.env.get("DATABASE_URL")!);
-await client.connect();
+const sql = postgres(Deno.env.get("DATABASE_URL")!, {
+  ssl: "require",
+});
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
   if (url.pathname === "/users") {
-    const result = await client.queryObject(
-      "select id, email, name from users limit 10"
-    );
-    return Response.json(result.rows);
+    const rows = await sql`
+      select id, email, name
+      from users
+      limit 10
+    `;
+    return Response.json(rows);
   }
 
-  return new Response("ok");
+  if (url.pathname === "/health") {
+    return Response.json({ ok: true });
+  }
+
+  return new Response("API running");
 });
