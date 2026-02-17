@@ -7,6 +7,10 @@ const sql = postgres(Deno.env.get("DATABASE_URL")!, {
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
+  if (url.pathname === "/health") {
+    return Response.json({ status: "ok" });
+  }
+
   if (url.pathname === "/users") {
     const rows = await sql`
       select id, email, name
@@ -14,10 +18,6 @@ Deno.serve(async (req) => {
       limit 10
     `;
     return Response.json(rows);
-  }
-
-  if (url.pathname === "/health") {
-    return Response.json({ ok: true });
   }
 
   return new Response("API running");
